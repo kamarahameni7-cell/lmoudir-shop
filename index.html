@@ -128,6 +128,10 @@ body{
   animation: fadeIn 0.5s ease-out forwards;
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
 /* قاعدة الحركة الجديدة */
 @keyframes neonMotion {
@@ -290,10 +294,72 @@ body{
     }
 }
 
+/* --- Loading Animation Styles (New) --- */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0f172a; /* Dark background matching the theme */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+#loading-overlay.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+}
+
+.loader-dots div {
+    width: 12px;
+    height: 12px;
+    margin: 0 6px;
+    background-color: #38bdf8; /* Neon blue theme color */
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loader-dots div:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loader-dots div:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1.0);
+        opacity: 1;
+    }
+}
 </style>
 </head>
 
 <body>
+
+<div id="loading-overlay">
+  <div class="loader-dots">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</div>
 
 <div class="container">
 
@@ -330,7 +396,7 @@ body{
   </div>
 
   <div id="snapchat-details" class="service-detail-card">
-    <a href="#" class="back-button" onclick="hideService()">العودة للخدمات</a>
+    <a href="#back" class="back-button" onclick="return hideService()">العودة للخدمات</a>
     <h2 class="section-title">Snap+ ✨</h2>
     <p class="section-subtitle">تفعيل سريع عبر واتساب — الأسعار بالموريتاني (MRU)</p>
 
@@ -340,7 +406,7 @@ body{
   </div>
 
   <div id="pubg-details" class="service-detail-card">
-    <a href="#" class="back-button" onclick="hideService()">العودة للخدمات</a>
+    <a href="#back" class="back-button" onclick="return hideService()">العودة للخدمات</a>
     <h2 class="section-title">PUBG UC 🎮</h2>
     <p class="section-subtitle">شحن UC بسرعة — اختر الكمية</p>
 
@@ -357,7 +423,7 @@ body{
   </div>
 
   <div id="tiktok-details" class="service-detail-card">
-    <a href="#" class="back-button" onclick="hideService()">العودة للخدمات</a>
+    <a href="#back" class="back-button" onclick="return hideService()">العودة للخدمات</a>
     <h2 class="section-title">TikTok Coins 🎵</h2>
     <p class="section-subtitle">شحن عملات TikTok</p>
 
@@ -372,7 +438,7 @@ body{
   </div>
 
   <div id="giftcards-details" class="service-detail-card">
-    <a href="#" class="back-button" onclick="hideService()">العودة للخدمات</a>
+    <a href="#back" class="back-button" onclick="return hideService()">العودة للخدمات</a>
     <h2 class="section-title">Gift Cards 💳</h2>
     <p class="section-subtitle">بطاقات رقمية — iTunes / PS / Xbox</p>
 
@@ -390,36 +456,95 @@ body{
   </div>
 
   <div class="footer">
-    Lmoudir-Shop © 2025 — جميع الحقوق محفوظة
+    Lmoudir-Shop ©️ 2025 — جميع الحقوق محفوظة
   </div>
 
 </div>
 
 <script>
-  function showService(serviceId) {
-    // إخفاء الشبكة الرئيسية للخدمات
-    document.getElementById('main-services').style.display = 'none';
-    // إخفاء جميع كروت التفاصيل أولاً
-    document.querySelectorAll('.service-detail-card').forEach(card => {
-      card.classList.remove('active');
-    });
-    // إظهار كرت التفاصيل المطلوب
-    document.getElementById(serviceId + '-details').classList.add('active');
-    // لضمان العودة لأعلى الصفحة عند التبديل
-    window.scrollTo(0, 0);
-  }
+    /**
+     * وظيفة تحديث العرض بناءً على معرّف الخدمة (Service ID).
+     * هذه هي الوظيفة الأساسية التي تُظهر أو تُخفي الأقسام.
+     * @param {string} serviceId - معرّف الخدمة ('snapchat', 'pubg', إلخ) أو سلسلة فارغة ('') للعودة إلى الصفحة الرئيسية.
+     */
+    function updateView(serviceId) {
+        const mainServices = document.getElementById('main-services');
+        const detailCards = document.querySelectorAll('.service-detail-card');
+        const detailCardToShow = document.getElementById(serviceId + '-details');
 
-  function hideService() {
-    // إظهار الشبكة الرئيسية للخدمات
-    document.getElementById('main-services').style.display = 'grid';
-    // إخفاء جميع كروت التفاصيل
-    document.querySelectorAll('.service-detail-card').forEach(card => {
-      card.classList.remove('active');
+        // 1. إخفاء جميع بطاقات التفاصيل أولاً
+        detailCards.forEach(card => card.classList.remove('active'));
+
+        if (serviceId && detailCardToShow) {
+            // 2. إذا كان هناك معرّف صحيح، أظهِر بطاقة التفاصيل وأخفِ الشبكة الرئيسية
+            mainServices.style.display = 'none';
+            // لضمان أن تبقى شبكة الخدمات الرئيسية مُخفية في حالة الـ popstate
+            
+            // إضافة تأخير بسيط لإعطاء الـ popstate وقت لتحديث الـ mainServices
+            setTimeout(() => {
+                mainServices.style.display = 'none';
+                detailCardToShow.classList.add('active');
+            }, 0);
+            
+            window.scrollTo(0, 0); // العودة لأعلى الصفحة
+        } else {
+            // 3. في حالة عدم وجود معرّف، أظهِر الشبكة الرئيسية
+            mainServices.style.display = 'grid';
+            window.scrollTo(0, 0); // العودة لأعلى الصفحة
+        }
+    }
+
+    /**
+     * وظيفة تُستدعى عند النقر على بطاقة خدمة في الشبكة الرئيسية.
+     * تقوم بإضافة حالة جديدة لسجل المتصفح (History API) لتفعيل زر الرجوع.
+     */
+    function showService(serviceId) {
+        // دفع حالة جديدة إلى سجل المتصفح (مع تغيير الـ URL إلى #snapchat مثلاً)
+        history.pushState({ service: serviceId }, serviceId, '#' + serviceId);
+        // تحديث العرض
+        updateView(serviceId);
+    }
+
+    /**
+     * وظيفة تُستدعى عند النقر على زر "العودة للخدمات".
+     * تقوم بالعودة إلى حالة البداية (الصفحة الرئيسية) في سجل المتصفح.
+     */
+    function hideService() {
+        // العودة إلى حالة الصفحة الرئيسية (بدون هاش #)
+        history.pushState({}, '', '#');
+        updateView('');
+        // منع السلوك الافتراضي للرابط (#back)
+        return false; 
+    }
+
+    /**
+     * التعامل مع ضغط زر الرجوع أو التقدم في المتصفح.
+     */
+    window.addEventListener('popstate', (event) => {
+        // استخراج معرّف الخدمة من الـ URL (إزالة علامة #)
+        const serviceId = location.hash.substring(1);
+        updateView(serviceId);
     });
-     // لضمان العودة لأعلى الصفحة عند العودة
-    window.scrollTo(0, 0);
-  }
+
+    /**
+     * عند تحميل الصفحة بالكامل:
+     * 1. إزالة شاشة التحميل.
+     * 2. التحقق من الـ URL لإظهار البطاقة المناسبة في حال الدخول برابط مباشر (Deep Linking).
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+        // التحقق من الهاش عند التحميل الأولي (Deep Linking)
+        const initialServiceId = location.hash.substring(1);
+        updateView(initialServiceId);
+
+        // إزالة شاشة التحميل
+        const overlay = document.getElementById('loading-overlay');
+        // تأخير بسيط لضمان سلاسة حركة الفتح
+        setTimeout(() => {
+            overlay.classList.add('fade-out');
+        }, 500); 
+    });
 </script>
 
 </body>
 </html>
+
