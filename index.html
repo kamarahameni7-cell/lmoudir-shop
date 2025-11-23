@@ -336,11 +336,12 @@ body{
 
 <body>
 
-<div id="intro-video-overlay">
-  <video id="intro-video" autoplay muted playsinline onended="fadeOutVideo()">
-    <source src="images/intro.mp4.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
+<div id="loading-overlay">
+  <div class="loader-dots">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
 </div>
 
 <div class="container">
@@ -555,27 +556,19 @@ body{
      * 1. إزالة شاشة التحميل.
      * 2. التحقق من الـ URL لإظهار البطاقة المناسبة في حال الدخول برابط مباشر (Deep Linking).
      */
-    function fadeOutVideo() {
-        const overlay = document.getElementById('intro-video-overlay');
-        overlay.classList.add('fade-out');
-        const container = document.querySelector('.container');
-        container.classList.add('show');
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
         // التحقق من الهاش عند التحميل الأولي (Deep Linking)
         const initialServiceId = location.hash.substring(1);
         updateView(initialServiceId);
 
-        // Fallback: show store after 5 seconds if video doesn't end
+        // إزالة شاشة التحميل وإظهار المتجر
+        const overlay = document.getElementById('loading-overlay');
+        const container = document.querySelector('.container');
+        // تأخير بسيط لضمان سلاسة حركة الفتح
         setTimeout(() => {
-            const overlay = document.getElementById('intro-video-overlay');
-            if (!overlay.classList.contains('fade-out')) {
-                overlay.classList.add('fade-out');
-                const container = document.querySelector('.container');
-                container.classList.add('show');
-            }
-        }, 5000);
+            overlay.classList.add('fade-out');
+            container.classList.add('show');
+        }, 500);
     });
 </script>
 
